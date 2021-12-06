@@ -1,0 +1,16 @@
+{
+  "name": "event-scheduler",
+  "version": "0.0.1",
+  "description": "A node.js server that let's you schedule a cron event. This will call a configured webhook. Event's can be repeating or a one time only thing",
+  "main": "/dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "event",
+    "cron",
+    "webhook"
+  ],
+  "author": "KyleMoran138",
+  "license": "ISC"
+}
