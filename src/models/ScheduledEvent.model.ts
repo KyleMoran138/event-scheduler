@@ -1,6 +1,6 @@
 export default interface IScheduledEvent {
   _id: string;
-  ownerId: string;
+  clientId: string;
   name: string;
   cron: string;
   requestUrl: string;

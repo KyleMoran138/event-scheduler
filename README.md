@@ -7,10 +7,10 @@ __Goal__: I have some serverless functions that need to run on an interval or on
 ### Typings
 - ScheduledEvent
   - _id: string
-  - ownerId: string
+  - clientId: string
   - name: string
   - cron: string
-  - requestUrl: string
+  - requestUrl: string (maybe rename to webhook url, more descriptive)
   - reportUrl?: string
   - active: boolean 
   - deleted: boolean
@@ -38,6 +38,12 @@ __Goal__: I have some serverless functions that need to run on an interval or on
 - ScheduledEventReport:
   - ???
 
+- Client:
+  - name: string
+  - email: string
+  - disabled: boolean
+  - keys: {name: string, value: string}[]
+
 ### Endpoints
 - post /scheduledEvent
   - Desc: creates scheduledEvent
@@ -54,3 +60,6 @@ __Goal__: I have some serverless functions that need to run on an interval or on
   - get latest report for scheduled event
 - get /scheduledEventReports/:scheduledEventId
   - get all reports for scheduled event
+
+### TODOs
+- I should probably get some unit testing around this, I would like to be able to depend on this api some day so it'd be good to have those...
