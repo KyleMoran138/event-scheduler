@@ -1,6 +1,6 @@
 export default class Repo<T> {
 
-  private directCallError = (methodName: string) => `REPO CLASS METHOD (${methodName}) DIRECTLY CALLED, YOU DID NOT MEAN TO DO THIS`;
+  protected directCallError = (methodName: string) => `REPO CLASS METHOD (${methodName}) DIRECTLY CALLED, YOU DID NOT MEAN TO DO THIS`;
 
   public createRecord = async (newData: Partial<T>): Promise<T | null> => {
     throw new Error(this.directCallError('createRecord'));
@@ -10,7 +10,7 @@ export default class Repo<T> {
     throw new Error(this.directCallError('getRecord'));
   }
 
-  public getAllRecords = async (_id: string): Promise<T | null> => {
+  public getAllRecords = async (): Promise<T[] | null> => {
     throw new Error(this.directCallError('getAllRecords'));
   }
 

@@ -1,25 +1,28 @@
 import IScheduledEvent from '../models/ScheduledEvent.model';
+import Repo from '../repo/Repo';
+import Service from './Service';
 
-export default class ScheduledEventService {
-  public static scheduleEvent = async (scheduledEventData: Partial<IScheduledEvent>): Promise<IScheduledEvent> => {
-    
-    return {
-      _id: '',
-      ownerId: '',
-      name: '',
-      cron: '',
-      requestUrl: '',
-      reportUrl: '',
-      active: true,
-      deleted: false,
-      runOnInit: false,
-      requestData: {
+export default class ScheduledEventService extends Service<ScheduledEventService>{
 
-      },
-      reportRequestData: {
-
-      } ,
-      ...scheduledEventData,
-    }
+  constructor(){
+    super();
   }
+
+  public create = async (data: unknown): Promise<ScheduledEventService | null> => {
+    const allUserScheduledEvents = await this.repo.getAllRecords();
+
+
+
+    return null;
+  };
+  public get = async (): Promise<ScheduledEventService | null> => {
+    return null;
+  };
+  public update = async (): Promise<ScheduledEventService | null> => {
+    return null;
+  };
+  public delete = async (): Promise<ScheduledEventService | null> => {
+    return null;
+  };
+  
 }
