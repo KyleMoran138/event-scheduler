@@ -39,6 +39,7 @@ __Goal__: I have some serverless functions that need to run on an interval or on
   - ???
 
 - Client:
+  - _id: string
   - name: string
   - email: string
   - disabled: boolean
