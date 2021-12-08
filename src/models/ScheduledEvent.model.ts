@@ -17,7 +17,16 @@ export interface IRequestData {
   headers?: HeadersInit;
 }
 
-export const ScheduledEvent = (scheduledEventData: IScheduledEvent): IScheduledEvent => ({
+export const ScheduledEvent = (scheduledEventData: Partial<IScheduledEvent>): IScheduledEvent => ({
+  _id: '',
+  clientId: '',
+  name: '',
+  cron: '',
+  requestUrl: '',
+  reportUrl: '',
+  active: true,
+  deleted: false,
+  runOnInit: false,
   ...scheduledEventData,
   requestData: {...scheduledEventData.requestData},
   reportRequestData: {...scheduledEventData.reportRequestData}
