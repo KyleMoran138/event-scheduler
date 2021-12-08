@@ -12,5 +12,10 @@
     "webhook"
   ],
   "author": "KyleMoran138",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/cron": "^1.7.3",
+    "cron": "^1.8.2",
+    "mongoose": "^6.1.0"
+  }
 }
