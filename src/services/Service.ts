@@ -8,16 +8,16 @@ export default class Service<T> {
     this.repo = new Repo<T>();
   }
 
-  public create = async (): Promise<T | null> => {
+  public create = async ({...args}): Promise<T | null> => {
     throw new Error(Service._getDirectCallError('create'))
   }  
-  public get = async (): Promise<T | null> => {
+  public get = async ({...args}): Promise<T | null> => {
     throw new Error(Service._getDirectCallError('get'))
   }  
-  public update = async (): Promise<T | null> => {
+  public update = async ({...args}): Promise<T | null> => {
     throw new Error(Service._getDirectCallError('update'))
   }  
-  public delete = async (): Promise<T | null> => {
+  public delete = async ({...args}): Promise<T | null> => {
     throw new Error(Service._getDirectCallError('delete'))
   }  
   
