@@ -65,4 +65,5 @@ __Goal__: I have some serverless functions that need to run on an interval or on
 ### TODOs
 - I should probably get some unit testing around this, I would like to be able to depend on this api some day so it'd be good to have those...
 - Fix typings for generic class params, silly ole me forgot how to do that right 🙄
-- Add premission restriction to low level service methods 
+- Add premission restriction to low level service methods
+- Create method for generating standard errors (default method on generic types)
