@@ -18,7 +18,7 @@ export default class Service<T extends IModel> {
   public update = async ({...args}): Promise<T | null> => {
     throw new Error(Service._getDirectCallError('update'))
   }  
-  public delete = async ({...args}): Promise<T | null> => {
+  public delete = async ({...args}): Promise<boolean> => {
     throw new Error(Service._getDirectCallError('delete'))
   }  
   
