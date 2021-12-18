@@ -8,7 +8,7 @@ export default class ScheduledEventRepo extends Repo<IScheduledEvent> {
   public getRecord = async (_id: string): Promise<IScheduledEvent | null> => {
     return null;
   };
-  public getAllRecords = async (_id: string): Promise<IScheduledEvent | null> => {
+  public getAllRecords = async (): Promise<IScheduledEvent[] | null> => {
     return null;
   };
   public updateRecord = async (_id: string, newData: Partial<IScheduledEvent>): Promise<IScheduledEvent | null> => {
