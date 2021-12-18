@@ -1,5 +1,6 @@
-export default interface IClient {
-  _id: string;
+import IModel from './Model';
+
+export default interface IClient extends IModel {
   name: string;
   email: string;
   disabled: boolean;

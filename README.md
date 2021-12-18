@@ -36,7 +36,7 @@ __Goal__: I have some serverless functions that need to run on an interval or on
   - data: \<responseDataType>
 
 - ScheduledEventReport:
-  - ???
+  - Success: boolean
 
 - Client:
   - _id: string

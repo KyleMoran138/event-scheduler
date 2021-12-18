@@ -1,5 +1,7 @@
-export default interface IScheduledEventReport {
-  _id: string
+import IModel from './Model';
+
+export default interface IScheduledEventReport extends IModel {
+  success: boolean;
 };
 
 export const ScheduledEventReport = (scheduledEventReportData: IScheduledEventReport) => ({

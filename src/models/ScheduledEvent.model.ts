@@ -1,4 +1,6 @@
-export default interface IScheduledEvent {
+import IModel from './Model';
+
+export default interface IScheduledEvent extends IModel {
   _id: string;
   clientId: string;
   name: string;
