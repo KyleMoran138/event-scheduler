@@ -1,4 +1,6 @@
-export default class Repo<T> {
+import IModel from '../models/Model';
+
+export default class Repo<T extends IModel> {
 
   protected directCallError = (methodName: string) => `REPO CLASS METHOD (${methodName}) DIRECTLY CALLED, YOU DID NOT MEAN TO DO THIS`;
 
@@ -10,7 +12,7 @@ export default class Repo<T> {
     throw new Error(this.directCallError('getRecord'));
   }
 
-  public getAllRecords = async (): Promise<T[] | null> => {
+  public getAllRecords = async ({...args}): Promise<T[] | null> => {
     throw new Error(this.directCallError('getAllRecords'));
   }
 

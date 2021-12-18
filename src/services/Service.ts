@@ -1,6 +1,7 @@
+import IModel from '../models/Model';
 import Repo from '../repo/Repo';
 
-export default class Service<T> {
+export default class Service<T extends IModel> {
   public repo: Repo<T>;
   private static _getDirectCallError = (methodName: string) => `BASE SERVICE METHOD (${methodName}) CALLED, YOU DIDN'T MEAN TO DO THIS!`
 
