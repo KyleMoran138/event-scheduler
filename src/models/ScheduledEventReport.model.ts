@@ -1,9 +1,20 @@
-import IModel from './Model';
+import { Schema } from 'mongoose';
+import { IModel } from '../models/Model';
 
-export default interface IScheduledEventReport extends IModel {
+interface ScheduledEventReport extends IModel {
   success: boolean;
 };
 
-export const ScheduledEventReport = (scheduledEventReportData: IScheduledEventReport) => ({
-  ...scheduledEventReportData
-})
+const ScheduledEventReportSchemaName = 'ScheduledEventReport';
+const ScheduledEventReportSchema = new Schema<ScheduledEventReport>({
+  success: {
+    type: Boolean,
+    required: true,
+  },
+});
+
+export {
+  ScheduledEventReport,
+  ScheduledEventReportSchemaName,
+  ScheduledEventReportSchema,
+}

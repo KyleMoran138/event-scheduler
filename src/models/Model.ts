@@ -1,3 +1,5 @@
-export default interface IModel {
-  _id: string;
-}
+import mongoose from 'mongoose';
+export interface IModel {
+  _id: mongoose.Types.ObjectId;
+
+};

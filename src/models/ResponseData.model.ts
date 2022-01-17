@@ -1,12 +1,39 @@
-import IModel from './Model';
+import { Schema } from 'mongoose';
+import { IModel } from '../models/Model';
 
-export default interface IResponseData<T = unknown> extends IModel {
+interface ResponseData<T = unknown> extends IModel {
   status: 'OK' | 'ERROR' | 'UNKNOWN';
   message: string;
   errorMessage: string;
   data: T;
 }
 
-export const ResponseData = (responseData: IResponseData): IResponseData => ({
-  ...responseData
+const ResponseDataSchemaName = 'ResponseData';
+const ResponseDataSchema = new Schema<ResponseData>({
+  status: {
+    type: String,
+    required: true,
+    default: 'UNKNOWN',
+  },
+  message: {
+    type: String,
+    required: false,
+    default: '',
+  },
+  errorMessage: {
+    type: String,
+    required: false,
+    default: '',
+  },
+  data: {
+    type: Schema.Types.Mixed,
+    required: false,
+    default: null,
+  },
 });
+
+export {
+  ResponseData,
+  ResponseDataSchemaName,
+  ResponseDataSchema,
+}
