@@ -1,119 +1,48 @@
-import IScheduledEvent, { ScheduledEvent } from '../models/ScheduledEvent.model';
-import Service from './Service';
+import { CLIENT_ID_NOT_FOUND, SCHEDULED_EVENT_EXISTS } from '../Exceptions';
+import { ScheduledEvent, ScheduledEventSchema, ScheduledEventSchemaName } from '../models/ScheduledEvent.model';
+import { ClientService } from './Client.service';
+import { Service } from './Service';
 
-export default class ScheduledEventService extends Service<IScheduledEvent>{
+export default class ScheduledEventService extends Service<ScheduledEvent>{
 
   constructor(){
-    super();
+    super(ScheduledEventSchemaName, ScheduledEventSchema);
   }
 
   /**
-   * Creates a new scheduledEvent using the repo.
-   * If missing required param returns null.
-   * Get's all scheduledEvents for the provided clientId that aren't deleted.
-   * If there's an event with the same name throws exception.
-   * If repo fails returns null.
+   * Create new scheduledEvent
+   * 
+   * 1) Get client.
+   * 2) If Client is not found throw CLIENT_ID_NOT_FOUND exception.
+   * 3) Find events with matching clientId and name that are not deleted.
+   * 4) If matching event found throw SCHEDULED_EVENT_EXISTS exception.
+   * 5) return new scheduledEvent.
  
-   * @param data: new ScheduledEventData
-   * @param currentClientId: id of client making request
-   * @returns IScheduledEvent | null
-   * @throws scheduledEvent exists error
+   * @param clientId: owner clientId
+   * @param scheduledEventData: data to create
+   * @throws CLIENT_ID_NOT_FOUND
+   * @throws SCHEDULED_EVENT_EXISTS
+   * @returns ScheduledEvent | null
    */
-  public create = async ({...data}): Promise<IScheduledEvent | null> => {
+  public createScheduledEvent = async (clientId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
+    const clientService = new ClientService();
+    const client = await clientService.get(clientId);
 
-    if(!data.currentClientId || !data.newEventData){
-      return null;
+    if(!client){
+      throw CLIENT_ID_NOT_FOUND(clientId);
     }
 
-    const newScheduledEventData = ScheduledEvent(data.newEventData);
-    const allUserScheduledEvents = (await this.repo.getAllRecords({}) || [])
-    .filter(event => event.clientId === data.currentClientId)
-    .filter(event => !event.deleted);
-
-    const eventExists = allUserScheduledEvents.find(event => 
-      event.name === newScheduledEventData.name 
-    );
+    const eventExists = (await this.find({
+      clientId,
+      name: scheduledEventData.name,
+      deleted: false,
+    }))?.length;
 
     if(eventExists){
-      throw new Error(`ScheduledEvent exists with id of (${eventExists._id})`);
+      throw SCHEDULED_EVENT_EXISTS();
     }
 
-    return await this.repo.createRecord(newScheduledEventData);
-  };
-
-  /**
-   * Get's a single scheduledEvent using the repo.
-   * If missing required param returns null.
-   * Filters out scheduledEvents that dont include currentClientId.
-   * Filters out scheduled\Events that are deleted.
-   * Finds scheduledEvent via _id.
-   * Returns found scheduledEvent or null if not found.
-
-   * @param currentClientId: id of client making request
-   * @param _id: id of scheduledEvent to get 
-   * @returns IScheduledEvent | null
-   */
-  public get = async ({...data}): Promise<IScheduledEvent | null> => {
-
-    if(!data.currentClientId || !data._id){
-      return null;
-    }
-
-    const scheduledEventToReturn = (await this.repo.getAllRecords({}) || [])
-    .filter(event => event.clientId === data.currentClientId)
-    .filter(event => !event.deleted)
-    .find(event => event._id === data._id);
-
-    return scheduledEventToReturn || null;
-  };
-
-  /**
-   * If missing required params returns null.
-   * Calls this.get and returns null if result is null.
-   * Calls repo.updateRecord method and returns result.
-
-   * @param currentClientId: id of client making request
-   * @param _id: id of scheduledEvent to update
-   * @param updatedData: data to update record with
-   * @returns IScheduledEvent | null
-   */
-  public update = async ({...data}): Promise<IScheduledEvent | null> => {
-
-    if(!data.currentClientId || !data._id || !data.updatedData){
-      return null;
-    }
-
-    const existingRecord = await this.get({_id: data._id, currentClientId: data.currentClientId});
-
-    if(!existingRecord){
-      return null;
-    }
-
-    return this.repo.updateRecord(data._id, data.updatedData);
-  };
-  
-  /**
-   * If missing required params returns false.
-   * Calls this.get and returns false if result is null.
-   * Calls repo.deleteRecord and returns result.
-
-   * @param currentClientId: id of client making request
-   * @param _id: id of scheduledEvent to delete
-   * @returns bool
-   */
-  public delete = async ({...data}): Promise<boolean> => {
-
-    if(!data.currentClientId || !data._id){
-      return false;
-    }
-
-    const recordToDelete = await this.get({_id: data._id, currentClientId: data.currentClientId});
-
-    if(!recordToDelete){
-      return false;
-    }
-
-    return this.repo.deleteRecord(data._id);
+    return await this.create(scheduledEventData);
   };
   
 }

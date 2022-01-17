@@ -1,25 +1,71 @@
-import IModel from '../models/Model';
-import Repo from '../repo/Repo';
+import { FilterQuery, Schema } from 'mongoose';
+import { IModel } from '../models/Model';
+import { Repo, DocumentType } from '../repo/Repo';
 
-export default class Service<T extends IModel> {
-  public repo: Repo<T>;
-  private static _getDirectCallError = (methodName: string) => `BASE SERVICE METHOD (${methodName}) CALLED, YOU DIDN'T MEAN TO DO THIS!`
+export class Service<T extends IModel> {
+  protected _repo: Repo<T>;
 
-  constructor(){
-    this.repo = new Repo<T>();
+  constructor(modelName: string, schema?: Schema<T>){
+    this._repo = new Repo<T>(modelName, schema);
   }
 
-  public create = async ({...args}): Promise<T | null> => {
-    throw new Error(Service._getDirectCallError('create'))
-  }  
-  public get = async ({...args}): Promise<T | null> => {
-    throw new Error(Service._getDirectCallError('get'))
-  }  
-  public update = async ({...args}): Promise<T | null> => {
-    throw new Error(Service._getDirectCallError('update'))
-  }  
-  public delete = async ({...args}): Promise<boolean> => {
-    throw new Error(Service._getDirectCallError('delete'))
-  }  
-  
+  protected _documentToType = (document: DocumentType<T>) => document.toObject() as T
+  protected _documentsToType = (documents: DocumentType<T>[]) => documents.map(
+    document => document.toObject() as T
+  );
+
+  public async create(newData: Partial<T>): Promise<T | null> {
+    const result = await (this._repo.createRecord(newData));
+
+    if(!result){
+      return null;
+    }
+
+    return this._documentToType(result);
+  };
+
+  public async get(_id: string, populate?: string[]): Promise<T | null>{ 
+    const result = await this._repo.getRecord(_id, populate);
+
+    if(!result){
+      return null;
+    }
+    
+    return this._documentToType(result);
+  };
+
+  public async getAll(populate?: string[]): Promise<T[] | null>{ 
+    const results = await this._repo.getAllRecords(populate);
+
+    if(!results){
+      return null;
+    }
+    
+    return this._documentsToType(results);
+  };
+
+  public async update(_id: string, newData: Partial<T>): Promise<T | null>{ 
+    const result = await this._repo.updateRecord(_id, newData);
+
+    if(!result){
+      return null;
+    }
+    
+    return this._documentToType(result);
+  };
+
+  public async delete(_id: string): Promise<boolean>{ 
+    return await this._repo.deleteRecord(_id) ;
+  };
+
+  public async find(filter: FilterQuery<T>, populate?: string[]): Promise<T[] | null>{ 
+    const result = await this._repo.find(populate || [], filter);
+
+    if(!result){
+      return null;
+    }
+    
+    return result;
+  };
+
 }
