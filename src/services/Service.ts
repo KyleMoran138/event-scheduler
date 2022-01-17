@@ -9,11 +9,6 @@ export class Service<T extends IModel> {
     this._repo = new Repo<T>(modelName, schema);
   }
 
-  protected _documentToType = (document: DocumentType<T>) => document.toObject() as T
-  protected _documentsToType = (documents: DocumentType<T>[]) => documents.map(
-    document => document.toObject() as T
-  );
-
   public async create(newData: Partial<T>): Promise<T | null> {
     const result = await (this._repo.createRecord(newData));
 
@@ -21,7 +16,7 @@ export class Service<T extends IModel> {
       return null;
     }
 
-    return this._documentToType(result);
+    return result;
   };
 
   public async get(_id: string, populate?: string[]): Promise<T | null>{ 
@@ -31,7 +26,7 @@ export class Service<T extends IModel> {
       return null;
     }
     
-    return this._documentToType(result);
+    return result;
   };
 
   public async getAll(populate?: string[]): Promise<T[] | null>{ 
@@ -41,7 +36,7 @@ export class Service<T extends IModel> {
       return null;
     }
     
-    return this._documentsToType(results);
+    return results;
   };
 
   public async update(_id: string, newData: Partial<T>): Promise<T | null>{ 
@@ -51,7 +46,7 @@ export class Service<T extends IModel> {
       return null;
     }
     
-    return this._documentToType(result);
+    return result;
   };
 
   public async delete(_id: string): Promise<boolean>{ 

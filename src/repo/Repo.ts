@@ -13,6 +13,11 @@ export class Repo<T extends IModel> {
     this._instance = mongoose.model<T>(modelName, schema);
   }
 
+  protected _documentToType = (document: DocumentType<T>) => document.toObject() as T
+  protected _documentsToType = (documents: DocumentType<T>[]) => documents.map(
+    document => document.toObject() as T
+  );
+
   protected handleException(exception: unknown, doThrow= false){
     console.error(`${this._instance.modelName.toUpperCase()} REPO EXCEPTION: ${exception}`);
     if(doThrow){
@@ -20,32 +25,41 @@ export class Repo<T extends IModel> {
     }
   }
 
-  public async createRecord(newData: Partial<T>): Promise<DocumentType<T> | null>{
+  public async createRecord(newData: Partial<T>): Promise<T | null>{
     const newInstance = new this._instance(newData);
     try{
-      return await newInstance.save();
+      return this._documentToType(await newInstance.save());
     }catch(e){
       this.handleException(e);
       return null;
     }
   };
 
-  public async getRecord(_id: string, populate?: string[]): Promise<DocumentType<T> | null>{
+  public async getRecord(_id: string, populate?: string[]): Promise<T | null>{
     try{
-      return await this._instance.findById(_id, undefined, {
+      const result = await this._instance.findById(_id, undefined, {
         populate,
       });
+      if(result === null){
+        return null;
+      }
+      return this._documentToType(result);
     }catch(e){
       this.handleException(e);
       return null;
     }
   };
 
-  public async getAllRecords(populate?: string[], ...args: unknown[]): Promise<DocumentType<T>[] | null>{
+  public async getAllRecords(populate?: string[], ...args: unknown[]): Promise<T[] | null>{
     try{
-      return await this._instance.find({ ...args }, undefined, {
+      const results = await this._instance.find({ ...args }, undefined, {
         populate,
       });
+      if(results === null){
+        return null;
+      }
+
+      return this._documentsToType(results)
     }catch(e){
       this.handleException(e);
       return null;
@@ -54,18 +68,28 @@ export class Repo<T extends IModel> {
 
   public async find(populate: string[], filter: mongoose.FilterQuery<T>): Promise<T[] | null>{
     try{
-      return (await this._instance.find(filter, undefined, {
+      const results = await (this._instance.find(filter, undefined, {
         populate,
-      })).map(document => document.toObject() as unknown as T);
+      }));
+      if(results === null){
+        return null;
+      }
+
+      return this._documentsToType(results)
     }catch(e){
       this.handleException(e);
       return null;
     }
   }
 
-  public async updateRecord(_id: string, newData: Partial<T>): Promise<DocumentType<T> | null>{
+  public async updateRecord(_id: string, newData: Partial<T>): Promise<T | null>{
     try{
-      return await this._instance.findByIdAndUpdate(_id, newData);
+      const result = await this._instance.findByIdAndUpdate(_id, newData);
+      if(result === null){
+        return null;
+      }
+
+      return this._documentToType(result);
     }catch(e){
       this.handleException(e);
       return null;
