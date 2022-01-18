@@ -4,7 +4,10 @@
   "description": "A node.js server that let's you schedule a cron event. This will call a configured webhook. Event's can be repeating or a one time only thing",
   "main": "/dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prestart": "yarn run build",
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "watch": "nodemon ./src/index.ts"
   },
   "keywords": [
     "event",
@@ -15,7 +18,12 @@
   "license": "ISC",
   "dependencies": {
     "@types/cron": "^1.7.3",
+    "@types/express": "^4.17.13",
     "cron": "^1.8.2",
-    "mongoose": "^6.1.0"
+    "dotenv": "^14.2.0",
+    "express": "^4.17.2",
+    "mongoose": "^6.1.0",
+    "nodemon": "^2.0.15",
+    "ts-node": "^10.4.0"
   }
 }
