@@ -23,7 +23,7 @@ class ClientService extends Service<Client>{
    * @returns Client | null
    */
   public createClient = async (name: string, email: string, disabled= false): Promise<Client | null> => {
-    const matchingClient = await this._repo.find([], {name, email});
+    const matchingClient = await this._repo.find([], {name, email, disabled: false});
     if(matchingClient === null){
       return null;
     }
