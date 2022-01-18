@@ -1,20 +1,20 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { ClientService } from './services/Client.service';
 import ScheduledEventService from './services/ScheduledEvent.service';
-import * as mongoose from 'mongoose';
-const config = require('dotenv').config();
+import mongoose from 'mongoose';
 
+const config = require('dotenv').config();
 const app = express();
+const MONGO_CONNECTION_URI = config.parsed.MONGO_CONNECTION_URI;
 const clientService = new ClientService();
 const scheduledEventService = new ScheduledEventService();
-//check for env var MONGO_CONNECTION_URI and throw exception if undefined
-const MONGO_CONNECTION_URI = config.parsed.MONGO_CONNECTION_URI;
-console.log(config)
+
 if (!MONGO_CONNECTION_URI) {
   throw new Error('MONGO_CONNECTION_URI is not defined');
 }
 
 mongoose.connect(MONGO_CONNECTION_URI);
+
 app.use(express.json());
 
 //async post endpoint to create a new client
