@@ -2,6 +2,7 @@ import { Schema } from 'mongoose';
 import { IModel } from '../models/Model';
 
 interface Client extends IModel {
+  firebaseUid: string;
   name: string;
   email: string;
   disabled: boolean;
@@ -21,6 +22,10 @@ const KeysSchema = new Schema({
 
 const ClientSchemaName = 'Client';
 const ClientSchema = new Schema<Client>({
+  firebaseUid: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: true,

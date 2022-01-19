@@ -1,6 +1,9 @@
 import { Service } from '../services/Service';
 import { Client, ClientSchema, ClientSchemaName } from '../models/Client.model'
 import { CLIENT_EXISTS } from '../Exceptions';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+
 
 class ClientService extends Service<Client>{
 
@@ -22,7 +25,7 @@ class ClientService extends Service<Client>{
    * @throws CLIENT_EXISTS
    * @returns Client | null
    */
-  public createClient = async (name: string, email: string, disabled= false): Promise<Client | null> => {
+  public createClient = async (name: string, email: string, password: string, disabled= false): Promise<Client | null> => {
     const matchingClient = await this._repo.find([], {name, email, disabled: false});
     if(matchingClient === null){
       return null;
@@ -32,11 +35,29 @@ class ClientService extends Service<Client>{
       throw CLIENT_EXISTS();
     }
 
-    return await this.create({
-      name,
-      email,
-      disabled,
-    });
+    const auth = getAdminAuth();
+    try{
+      const firebaseUser = await auth.createUser({email, password});
+      return await this.create({
+        name,
+        email,
+        disabled,
+        firebaseUid: firebaseUser.uid,
+      });
+    }catch(e){
+      throw CLIENT_EXISTS();
+    }
+  }
+
+  // create method to log into client account with email and password
+  public loginClient = async (email: string, password: string): Promise<string | null> => {
+    const auth = getAuth();
+    try{
+      const firebaseUser = await signInWithEmailAndPassword(auth, email, password);
+      return firebaseUser.user.uid;
+    }catch(e){
+      return null;
+    }
   }
 
 };
