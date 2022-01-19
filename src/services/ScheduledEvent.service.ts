@@ -24,25 +24,25 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
    * @throws SCHEDULED_EVENT_EXISTS
    * @returns ScheduledEvent | null
    */
-  public createScheduledEvent = async (clientId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
-    const clientService = new ClientService();
-    const client = await clientService.get(clientId);
+  // public createScheduledEvent = async (clientId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
+  //   const clientService = new ClientService();
+  //   const client = await clientService.get(clientId);
 
-    if(!client){
-      throw CLIENT_ID_NOT_FOUND(clientId);
-    }
+  //   if(!client){
+  //     throw CLIENT_ID_NOT_FOUND(clientId);
+  //   }
 
-    const eventExists = (await this.find({
-      clientId,
-      name: scheduledEventData.name,
-      deleted: false,
-    }))?.length;
+  //   const eventExists = (await this.find({
+  //     clientId,
+  //     name: scheduledEventData.name,
+  //     deleted: false,
+  //   }))?.length;
 
-    if(eventExists){
-      throw SCHEDULED_EVENT_EXISTS();
-    }
+  //   if(eventExists){
+  //     throw SCHEDULED_EVENT_EXISTS();
+  //   }
 
-    return await this.create(scheduledEventData);
-  };
+  //   return await this.create(scheduledEventData);
+  // };
   
 }

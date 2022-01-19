@@ -2,13 +2,16 @@ import { Service } from '../services/Service';
 import { Client, ClientSchema, ClientSchemaName } from '../models/Client.model'
 import { CLIENT_EXISTS } from '../Exceptions';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, Auth } from "firebase/auth";
 
 
 class ClientService extends Service<Client>{
 
-  constructor(){
+  private firebaseAppAuth: Auth;
+
+  constructor(appAuth: Auth){
     super(ClientSchemaName, ClientSchema);
+    this.firebaseAppAuth = appAuth;
   }
 
   /**
@@ -51,9 +54,8 @@ class ClientService extends Service<Client>{
 
   // create method to log into client account with email and password
   public loginClient = async (email: string, password: string): Promise<string | null> => {
-    const auth = getAuth();
     try{
-      const firebaseUser = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = await signInWithEmailAndPassword(this.firebaseAppAuth, email, password);
       return firebaseUser.user.uid;
     }catch(e){
       return null;

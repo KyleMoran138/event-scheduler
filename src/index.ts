@@ -5,6 +5,7 @@ import { App, initializeApp as initializeAdminApp } from 'firebase-admin/app';
 import admin from 'firebase-admin';
 import { FirebaseApp, initializeApp } from '@firebase/app';
 import mongoose from 'mongoose';
+import { getAuth } from 'firebase/auth';
 
 
 // app vars
@@ -43,8 +44,8 @@ if(!FIREBASE_TYPE || !FIREBASE_PROJECT_ID || !FIREBASE_PRIVATE_KEY_ID || !FIREBA
 }
 
 // create services
-const clientService = new ClientService();
-const scheduledEventService = new ScheduledEventService();
+let clientService: ClientService; 
+let scheduledEventService: ScheduledEventService; 
 
 app.use(express.json());
 
@@ -111,6 +112,11 @@ app.listen(SERVER_PORT, async () => {
     appId: FIREBASE_APP_ID,
   });
   console.log('Connected to firebase app');
+
+  console.log('Initializing services...');
+  clientService = new ClientService(getAuth(firebaseApp));
+  scheduledEventService = new ScheduledEventService();
+  console.log('Services initialized');
   
   console.log(`Server listening on port ${SERVER_PORT}`);
 });
