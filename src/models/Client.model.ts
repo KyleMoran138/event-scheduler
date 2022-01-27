@@ -7,6 +7,7 @@ interface Client extends IModel {
   email: string;
   disabled: boolean;
   keys: {name: string, value: string}[];
+  token: string;
 }
 
 const KeysSchema = new Schema({

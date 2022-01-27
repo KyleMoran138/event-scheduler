@@ -52,11 +52,41 @@ class ClientService extends Service<Client>{
     }
   }
 
-  // create method to log into client account with email and password
-  public loginClient = async (email: string, password: string): Promise<string | null> => {
+  
+  public loginClient = async (email: string, password: string): Promise<Client | null> => {
     try{
       const firebaseUser = await signInWithEmailAndPassword(this.firebaseAppAuth, email, password);
-      return firebaseUser.user.uid;
+      const clients = await this._repo.find([], {firebaseUid: firebaseUser.user.uid});
+    
+      if(clients === null){
+        return null;
+      }
+
+      const client = clients[0];
+      client.token = await firebaseUser.user.getIdToken();
+
+      return client;
+    }catch(e){
+      return null;
+    }
+  }
+
+  // create login method that uses token string and decodes it
+  // returns client data from database
+  // if client not found, return null
+  public getClient = async (token: string): Promise<Client | null> => {
+    const auth = getAdminAuth();
+    try{
+      const decodedToken = await auth.verifyIdToken(token);
+      const clients = await this._repo.find([], {firebaseUid: decodedToken.uid});
+      if(clients === null){
+        return null;
+      }
+
+      const client = clients[0];
+      client.token = token;
+
+      return client;
     }catch(e){
       return null;
     }

@@ -49,6 +49,37 @@ let scheduledEventService: ScheduledEventService;
 
 app.use(express.json());
 
+// create array of paths that require authentication
+const authPaths = [
+  '/product',
+];
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  const isAuthPath = authPaths.findIndex(authPath => req.path.startsWith(authPath)) !== -1;
+
+  if(!isAuthPath){
+    next();
+    return;
+  }
+  
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    admin.auth().verifyIdToken(token)
+      .then(decodedToken => {
+        // set request.body.user to result of getClient
+        return clientService.getClient(decodedToken.uid);
+        
+        next();
+      })
+      .catch(err => {
+        res.status(401).send(err);
+      });
+  } else {
+    res.status(401).send('No token provided');
+  }
+});
+
 app.post('/client', async (req, res) => {
   if (!req.body.name) {
     res.status(400).send('Name is required');
@@ -65,16 +96,40 @@ app.post('/client', async (req, res) => {
 
   try {
     const client = await clientService.createClient(req.body.name, req.body.email, req.body.password);
-    console.log('does login work', await clientService.loginClient(req.body.email, req.body.password));
     res.send(client);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error: error}));
   }
 });
 
+app.post('/client/login', async (req, res) => {
+  if (!req.body.email) {
+    res.status(400).send('Email is required');
+    return;
+  }
+  if(!req.body.password){
+    res.status(400).send('Password is required');
+    return;
+  }
+
+  try {
+    const client = await clientService.loginClient(req.body.email, req.body.password);
+    res.send(JSON.stringify(client?.token));
+  } catch (error) {
+    res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error}));
+  }
+});
+
+// create product get endpoint that returns empty json object
+app.get('/product', (req, res) => {
+  res.send({});
+});
+
+
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err);
-  res.status(500).send('Something went wrong');
+  res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error: err}));
 });
 
 
