@@ -111,4 +111,5 @@ export {
   RequestData,
   ScheduledEventSchemaName,
   ScheduledEventSchema,
+  createScheduledEventSchema,
 };

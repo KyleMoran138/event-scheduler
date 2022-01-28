@@ -176,6 +176,17 @@ const setUpRoutes = () => {
       res.status(500).send(generateErrorResponseBody('Soemthing went wrong', error));
     }
   });
+
+  app.post('/events', async (req, res) => {
+    try {
+      // const client = req.body.client as Client;
+      // const event = await scheduledEventService.createScheduledEvent(client._id.toString(), req.body.event);
+      // res.send(event);
+      res.send('Not implemented');
+    } catch (error) {
+      res.status(500).send(generateErrorResponseBody('Soemthing went wrong', error));
+    }
+  });
 }
 
 startServer();

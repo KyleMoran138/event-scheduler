@@ -7,8 +7,6 @@ const authMiddleware = (clientService: ClientService) => async (req: Request, re
   const routeConfig = getRouteConfigForRequest(req);
   const authHeader = req.headers.authorization;
 
-  console.log(`AUTH ${req.method} ${req.path}`);
-
   if(!routeConfig || !routeConfig.authRequired){
     return next();
   }
@@ -50,7 +48,10 @@ const requestDataValidatorMiddleware = () => async (req: Request, res: Response,
   const validationSchema = routeConfig.bodyValidationSchema;
   const validationResult = validationSchema.validate(req.body);
   if(validationResult.error){
-    res.status(400).send({errorMessage: 'Invalid request', error: validationResult.error});
+    res.status(400).send({
+      errorMessage: 'Invalid request', 
+      error: validationResult.error.message
+    });
     return;
   }
 
