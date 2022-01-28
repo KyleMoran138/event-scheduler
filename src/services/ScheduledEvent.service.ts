@@ -1,12 +1,21 @@
-import { CLIENT_ID_NOT_FOUND, SCHEDULED_EVENT_EXISTS } from '../Exceptions';
+import { CLIENT_ID_NOT_FOUND, FAILED_TO_CREATE_SCHEDULED_EVENT, SCHEDULED_EVENT_EXISTS, SCHEDULED_EVENT_NOT_FOUND } from '../Exceptions';
 import { ScheduledEvent, ScheduledEventSchema, ScheduledEventSchemaName } from '../models/ScheduledEvent.model';
 import { ClientService } from './Client.service';
 import { Service } from './Service';
+import { ScheduledTask } from 'node-cron';
+import * as cron from 'node-cron';
 
 export default class ScheduledEventService extends Service<ScheduledEvent>{
 
-  constructor(){
+  private clientService: ClientService;
+
+  // Currently running cron jobs
+  private cronJobs: Map<string, ScheduledTask> = new Map();
+
+  constructor(clientService: ClientService){
     super(ScheduledEventSchemaName, ScheduledEventSchema);
+
+    this.clientService = clientService;
   }
 
   /**
@@ -24,25 +33,128 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
    * @throws SCHEDULED_EVENT_EXISTS
    * @returns ScheduledEvent | null
    */
-  // public createScheduledEvent = async (clientId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
-  //   const clientService = new ClientService();
-  //   const client = await clientService.get(clientId);
+  public createScheduledEvent = async (clientId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
+    const client = await this.clientService.get(clientId);
 
-  //   if(!client){
-  //     throw CLIENT_ID_NOT_FOUND(clientId);
-  //   }
+    if(!client){
+      throw CLIENT_ID_NOT_FOUND(clientId);
+    }
 
-  //   const eventExists = (await this.find({
-  //     clientId,
-  //     name: scheduledEventData.name,
-  //     deleted: false,
-  //   }))?.length;
+    const eventExists = (await this.find({
+      clientId,
+      name: scheduledEventData.name,
+      deleted: false,
+    }))?.length;
 
-  //   if(eventExists){
-  //     throw SCHEDULED_EVENT_EXISTS();
-  //   }
+    if(eventExists){
+      throw SCHEDULED_EVENT_EXISTS();
+    }
 
-  //   return await this.create(scheduledEventData);
-  // };
+    const event = await this.create(scheduledEventData);
+
+    if(!event){
+      throw FAILED_TO_CREATE_SCHEDULED_EVENT();
+    }
+
+    //schedule event
+    await this.scheduleEvent(event?._id.toString());
+
+    return event;
+
+  };
+
+  public getAllScheduledEvents = async (clientId: string): Promise<ScheduledEvent[] | null> => {
+    return await this.find({
+      clientId,
+      deleted: false,
+    }, [ScheduledEventSchemaName]);
+  }
+
+  public getScheduledEventById = async (clientId: string, eventId: string): Promise<ScheduledEvent | null> => {
+    const event = await this.get(eventId);
+    if(!event){
+      return null;
+    }
+
+    if(event.clientId.toString() !== clientId){
+      throw SCHEDULED_EVENT_NOT_FOUND();
+    }
+
+    return event;
+  }
+
+  public deleteScheduledEvent = async (clientId: string, eventId: string): Promise<string | null> => {
+    const event = await this.get(eventId);
+    if(!event){
+      return null;
+    }
+
+    if(event.clientId.toString() !== clientId){
+      throw SCHEDULED_EVENT_NOT_FOUND();
+    }
+
+    await this.delete(eventId);
+    return eventId;
+  }
+
+  public scheduleEvent = async (eventId: string): Promise<ScheduledTask | null> => {
+    const event = await this.get(eventId);
+    if(!event){
+      return null;
+    }
+
+    if(this.cronJobs.has(eventId)){
+      return this.cronJobs.get(eventId) || null;
+    }
+
+    if(event.active){
+      const cronJob = cron.schedule(event.cron, () => {
+        // log message with eventId and name
+        console.log(`(${event._id.toString()})${event.name} event triggered`);
+      });
+
+      this.cronJobs.set(eventId, cronJob);
+      return cronJob;
+    }
+
+    return null;
+  }
+
+  // create stop event method
+  public stopEvent = async (eventId: string): Promise<boolean> => {
+    const event = await this.get(eventId);
+    if(!event){
+      return false;
+    }
+
+    if(!this.cronJobs.has(eventId)){
+      return true;
+    }
+
+    const cronJob = this.cronJobs.get(eventId);
+    if(cronJob){
+      cronJob.stop();
+    }
+
+    this.cronJobs.delete(eventId);
+    return true;
+  }
+
+  //create method to schedule all events in the database
+  public scheduleAllEvents = async (): Promise<boolean> => {
+    const events = await this.getAll();
+    if(!events){
+      return false;
+    }
+
+    for(const event of events){
+      await this.scheduleEvent(event._id.toString());
+    }
+
+    return true;
+  }
+
+  //method to stop all events
+
   
 }

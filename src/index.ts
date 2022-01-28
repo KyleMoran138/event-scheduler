@@ -6,6 +6,7 @@ import admin from 'firebase-admin';
 import { FirebaseApp, initializeApp } from '@firebase/app';
 import mongoose from 'mongoose';
 import { getAuth } from 'firebase/auth';
+import { Client } from './models/Client.model';
 
 
 // app vars
@@ -38,10 +39,31 @@ const FIREBASE_APP_ID = config.parsed.FIREBASE_APP_ID;
 if (!MONGO_CONNECTION_URI) {
   throw new Error('MONGO_CONNECTION_URI is not defined');
 }
+const envVars = [
+  ['FIREBASE_TYPE', FIREBASE_TYPE],
+  ['FIREBASE_PROJECT_ID', FIREBASE_PROJECT_ID],
+  ['FIREBASE_PRIVATE_KEY_ID', FIREBASE_PRIVATE_KEY_ID],
+  ['FIREBASE_PRIVATE_KEY', FIREBASE_PRIVATE_KEY],
+  ['FIREBASE_CLIENT_EMAIL', FIREBASE_CLIENT_EMAIL],
+  ['FIREBASE_CLIENT_ID', FIREBASE_CLIENT_ID],
+  ['FIREBASE_AUTH_URI', FIREBASE_AUTH_URI],
+  ['FIREBASE_TOKEN_URI', FIREBASE_TOKEN_URI],
+  ['FIREBASE_AUTH_PROVIDER_X509_CERT_URL', FIREBASE_AUTH_PROVIDER_X509_CERT_URL],
+  ['FIREBASE_CLIENT_X509_CERT_URL', FIREBASE_CLIENT_X509_CERT_URL],
+  ['FIREBASE_API_KEY', FIREBASE_API_KEY],
+  ['FIREBASE_AUTH_DOMAIN', FIREBASE_AUTH_DOMAIN],
+  ['FIREBASE_STORAGE_BUCKET', FIREBASE_STORAGE_BUCKET],
+  ['FIREBASE_MESSAGING_SENDER_ID', FIREBASE_MESSAGING_SENDER_ID],
+  // ['FIREBASE_APP_ID', FIREBASE_APP_ID],
+];
 
-if(!FIREBASE_TYPE || !FIREBASE_PROJECT_ID || !FIREBASE_PRIVATE_KEY_ID || !FIREBASE_PRIVATE_KEY || !FIREBASE_CLIENT_EMAIL || !FIREBASE_CLIENT_ID || !FIREBASE_AUTH_URI || !FIREBASE_TOKEN_URI || !FIREBASE_AUTH_PROVIDER_X509_CERT_URL || !FIREBASE_CLIENT_X509_CERT_URL || !FIREBASE_API_KEY || !FIREBASE_AUTH_DOMAIN || !FIREBASE_STORAGE_BUCKET || !FIREBASE_MESSAGING_SENDER_ID || !FIREBASE_APP_ID){
-  throw new Error('FIREBASE CONFIG VARIABLES MISSING');
+//check if env vars are defined
+for (const [varName, envVar] of envVars) {
+  if (!envVar) {
+    throw new Error(`${varName} is not defined`);
+  }
 }
+
 
 // create services
 let clientService: ClientService; 
@@ -49,12 +71,11 @@ let scheduledEventService: ScheduledEventService;
 
 app.use(express.json());
 
-// create array of paths that require authentication
 const authPaths = [
-  '/product',
+  '/events',
 ];
 
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use(async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   const isAuthPath = authPaths.findIndex(authPath => req.path.startsWith(authPath)) !== -1;
 
@@ -65,21 +86,35 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   
   if (authHeader) {
     const token = authHeader.split(' ')[1];
-    admin.auth().verifyIdToken(token)
-      .then(decodedToken => {
-        // set request.body.user to result of getClient
-        return clientService.getClient(decodedToken.uid);
-        
+    await admin.auth().verifyIdToken(token)
+      .then(async (decodedToken) => {
+        req.body.client = (await clientService.find({uid: decodedToken.uid}) || [])[0];
+        if(!req.body.client){
+          res.status(401).send({errorMessage: 'Unauthorized'});
+        }
         next();
       })
       .catch(err => {
-        res.status(401).send(err);
+        res.status(401).send({errorMessage: 'Unauthorized', error: err});
       });
   } else {
-    res.status(401).send('No token provided');
+    res.status(401).send({errorMessage: 'Unauthorized'});
   }
 });
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`REQUEST ${req.method} ${req.path}`);
+  next();
+});
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.on('finish', () => {
+    console.log(`RESPONSE ${req.method} ${req.path} ${res.statusCode}`);
+  });
+  next();
+});
+
+// CLIENT ROUTES
 app.post('/client', async (req, res) => {
   if (!req.body.name) {
     res.status(400).send('Name is required');
@@ -114,24 +149,59 @@ app.post('/client/login', async (req, res) => {
 
   try {
     const client = await clientService.loginClient(req.body.email, req.body.password);
-    res.send(JSON.stringify(client?.token));
+    res.send(JSON.stringify({token: client?.token}));
   } catch (error) {
     res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error}));
   }
 });
 
-// create product get endpoint that returns empty json object
-app.get('/product', (req, res) => {
-  res.send({});
+// EVENT ROUTES
+app.get('/events', async (req, res) => {
+  try {
+    const client = req.body.client as Client;
+    const events = await scheduledEventService.getAllScheduledEvents(client._id.toString());
+    res.send(events);
+  } catch (error) {
+    res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error}));
+  }
 });
 
+app.get('/events/:id', async (req, res) => {
+  try {
+    const event = await scheduledEventService.getScheduledEventById(req.body.clientId, req.params.id);
+    res.send(event);
+  } catch (error) {
+    res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error}));
+  }
+});
+
+// create event for client
+app.post('/events', async (req, res) => {
+  try {
+    // validate body params
+    if (!req.body.clientId) {
+      res.status(400).send('ClientId is required');
+      return;
+    }
+    if (!req.body.name) {
+      res.status(400).send('Name is required');
+      return;
+    }
+    if (!req.body.description) {
+
+    const client = req.body.client as Client;
+    const event = await scheduledEventService.createScheduledEvent(client._id.toString(), req.body);
+    res.send(event);
+  }catch (error) {
+    res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error}));
+  }
+});
 
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err);
   res.status(500).send(JSON.stringify({errorMessage: 'Something went wrong', error: err}));
 });
-
 
 app.listen(SERVER_PORT, async () => {
   console.log('Connecting to database...');
@@ -170,8 +240,24 @@ app.listen(SERVER_PORT, async () => {
 
   console.log('Initializing services...');
   clientService = new ClientService(getAuth(firebaseApp));
-  scheduledEventService = new ScheduledEventService();
+  scheduledEventService = new ScheduledEventService(clientService);
   console.log('Services initialized');
   
   console.log(`Server listening on port ${SERVER_PORT}`);
 });
+
+//create body validator method that will validate the body params of the request and return an array of errors
+function validateBody(schema: any) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = Joi.validate(req.body, schema);
+    if (result.error) {
+      res.status(400).send(result.error);
+      return;
+    }
+    if (!req.value) {
+      req.value = {};
+    }
+    req.value['body'] = result.value;
+    next();
+  };
+}
