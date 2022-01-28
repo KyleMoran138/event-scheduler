@@ -57,7 +57,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     }
 
     //schedule event
-    await this.scheduleEvent(event?._id.toString());
+    await this.startEventCron(event?._id.toString());
 
     return event;
 
@@ -97,7 +97,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return eventId;
   }
 
-  public scheduleEvent = async (eventId: string): Promise<ScheduledTask | null> => {
+  public startEventCron = async (eventId: string): Promise<ScheduledTask | null> => {
     const event = await this.get(eventId);
     if(!event){
       return null;
@@ -120,8 +120,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return null;
   }
 
-  // create stop event method
-  public stopEvent = async (eventId: string): Promise<boolean> => {
+  public stopEventCron = async (eventId: string): Promise<boolean> => {
     const event = await this.get(eventId);
     if(!event){
       return false;
@@ -140,21 +139,17 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return true;
   }
 
-  //create method to schedule all events in the database
-  public scheduleAllEvents = async (): Promise<boolean> => {
+  public startAllEventsCrons = async (): Promise<boolean> => {
     const events = await this.getAll();
     if(!events){
       return false;
     }
 
     for(const event of events){
-      await this.scheduleEvent(event._id.toString());
+      await this.startEventCron(event._id.toString());
     }
 
     return true;
   }
-
-  //method to stop all events
-
   
 }

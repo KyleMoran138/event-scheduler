@@ -1,3 +1,4 @@
+import Joi from 'joi';
 import { Schema } from 'mongoose';
 import { IModel } from '../models/Model';
 import { ObjectId, SchemaObjectId } from '../repo/Repo';
@@ -79,6 +80,30 @@ const ScheduledEventSchema = new Schema<ScheduledEvent>({
     required: false,
     default: {},
   },
+});
+
+const createScheduledEventSchema = Joi.object({
+  name: Joi
+    .string()
+    .min(5)
+    .max(20)
+    .alphanum()
+    .required(),
+
+  cron: Joi
+    .string()
+    .required(),
+
+  requestUrl: Joi
+    .string()
+    .uri()
+    .required(),
+
+  reportUrl: Joi
+    .string()
+    .uri()
+    .not()
+    .required(),
 });
 
 export {
