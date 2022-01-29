@@ -179,11 +179,14 @@ const setUpRoutes = () => {
 
   app.post('/events', async (req, res) => {
     try {
-      // const client = req.body.client as Client;
-      // const event = await scheduledEventService.createScheduledEvent(client._id.toString(), req.body.event);
-      // res.send(event);
-      res.send('Not implemented');
-    } catch (error) {
+      const client = req.body.client as Client;
+      const event = await scheduledEventService.createScheduledEvent(client._id.toString(), req.body);
+      res.send(event);
+    } catch (error: any) {
+      if(error.message){
+        res.status(500).send(generateErrorResponseBody(error.message, null));
+        return;
+      }
       res.status(500).send(generateErrorResponseBody('Soemthing went wrong', error));
     }
   });

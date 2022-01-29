@@ -16,6 +16,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     super(ScheduledEventSchemaName, ScheduledEventSchema);
 
     this.clientService = clientService;
+    this.startAllEventsCrons();
   }
 
   /**
@@ -50,7 +51,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
       throw SCHEDULED_EVENT_EXISTS();
     }
 
-    const event = await this.create(scheduledEventData);
+    const event = await this.create({...scheduledEventData, clientId: client._id});
 
     if(!event){
       throw FAILED_TO_CREATE_SCHEDULED_EVENT();
@@ -67,7 +68,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return await this.find({
       clientId,
       deleted: false,
-    }, [ScheduledEventSchemaName]);
+    });
   }
 
   public getScheduledEventById = async (clientId: string, eventId: string): Promise<ScheduledEvent | null> => {

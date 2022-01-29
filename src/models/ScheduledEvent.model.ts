@@ -101,9 +101,20 @@ const createScheduledEventSchema = Joi.object({
 
   reportUrl: Joi
     .string()
-    .uri()
-    .not()
-    .required(),
+    .uri(),
+
+  active: Joi
+    .boolean(),
+
+  runOnInit: Joi
+    .boolean(),
+
+  requestData: Joi
+    .object(),
+
+  reportRequestData: Joi
+    .object(),
+
 });
 
 export {
