@@ -19,5 +19,11 @@ export const routeConfigs: Route[] = [
     method: 'POST',
     authRequired: true,
     bodyValidationSchema: createScheduledEventSchema,
+  },
+  {
+    path: '/events',
+    method: 'PUT',
+    authRequired: true,
+    bodyValidationSchema: createScheduledEventSchema,
   }
 ]

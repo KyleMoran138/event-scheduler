@@ -1,4 +1,4 @@
-import { CLIENT_ID_NOT_FOUND, FAILED_TO_CREATE_SCHEDULED_EVENT, SCHEDULED_EVENT_EXISTS, SCHEDULED_EVENT_NOT_FOUND } from '../Exceptions';
+import { CLIENT_ID_NOT_FOUND, FAILED_TO_CREATE_SCHEDULED_EVENT, FAILED_TO_UPDATE_SCHEDULED_EVENT, SCHEDULED_EVENT_EXISTS, SCHEDULED_EVENT_NOT_FOUND } from '../Exceptions';
 import { ScheduledEvent, ScheduledEventSchema, ScheduledEventSchemaName } from '../models/ScheduledEvent.model';
 import { ClientService } from './Client.service';
 import { Service } from './Service';
@@ -16,7 +16,8 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     super(ScheduledEventSchemaName, ScheduledEventSchema);
 
     this.clientService = clientService;
-    this.startAllEventsCrons();
+    
+    this._initEventCronsInDb();
   }
 
   /**
@@ -151,6 +152,43 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     }
 
     return true;
+  }
+
+  public updateScheduledEvent = async (clientId: string, eventId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
+    const event = await this.get(eventId);
+    if(!event){
+      return null;
+    }
+
+    delete scheduledEventData.clientId;
+    delete scheduledEventData._id;
+
+    if(event.clientId.toString() !== clientId){
+      throw SCHEDULED_EVENT_NOT_FOUND();
+    }
+
+    const updatedEvent = await this.update(eventId, scheduledEventData);
+    if(!updatedEvent){
+      throw FAILED_TO_UPDATE_SCHEDULED_EVENT();
+    }
+
+    if(updatedEvent.active && !this.cronJobs.has(eventId)){
+      await this.startEventCron(eventId);
+    }
+
+    if(!updatedEvent.active && this.cronJobs.has(eventId)){
+      await this.stopEventCron(eventId);
+    }
+
+    return updatedEvent;
+  }
+
+  // private async method to start all cron jobs in db
+  private async _initEventCronsInDb(): Promise<boolean> {
+    console.log('ScheduledEventService: Loading cron jobs...');
+    const result = await this.startAllEventsCrons();
+    console.log(`ScheduledEventService: Loaded ${this.cronJobs.size} cron jobs.`);
+    return result;
   }
   
 }

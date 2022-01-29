@@ -190,6 +190,16 @@ const setUpRoutes = () => {
       res.status(500).send(generateErrorResponseBody('Soemthing went wrong', error));
     }
   });
+
+  app.put('/events/:id', async (req, res) => {
+    try {
+      const client = req.body.client as Client;
+      const event = await scheduledEventService.updateScheduledEvent(client._id.toString(), req.params.id, req.body);
+      res.send(event);
+    } catch (error) {
+      res.status(500).send(generateErrorResponseBody('Soemthing went wrong', error));
+    }
+  });
 }
 
 startServer();
