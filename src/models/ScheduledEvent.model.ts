@@ -138,6 +138,9 @@ const updateScheduledEventSchema = Joi.object({
   active: Joi
     .boolean(),
 
+  deleted: Joi
+    .boolean(),
+
   runOnInit: Joi
     .boolean(),
 
