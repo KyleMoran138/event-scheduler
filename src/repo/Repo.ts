@@ -84,12 +84,12 @@ export class Repo<T extends IModel> {
 
   public async updateRecord(_id: string, newData: Partial<T>): Promise<T | null>{
     try{
-      const result = await this._instance.findByIdAndUpdate(_id, newData);
+      const result = await this._instance.updateOne({_id}, newData);
       if(result === null){
         return null;
       }
 
-      return this._documentToType(result);
+      return await this.getRecord(_id);
     }catch(e){
       this.handleException(e);
       return null;

@@ -1,5 +1,5 @@
 import { Schema } from 'joi';
-import { createScheduledEventSchema } from './models/ScheduledEvent.model';
+import { createScheduledEventSchema, updateScheduledEventSchema } from './models/ScheduledEvent.model';
 
 export type Route = {
   path: string;
@@ -24,6 +24,6 @@ export const routeConfigs: Route[] = [
     path: '/events',
     method: 'PUT',
     authRequired: true,
-    bodyValidationSchema: createScheduledEventSchema,
+    bodyValidationSchema: updateScheduledEventSchema,
   }
 ]

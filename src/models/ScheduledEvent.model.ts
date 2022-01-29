@@ -117,10 +117,43 @@ const createScheduledEventSchema = Joi.object({
 
 });
 
+const updateScheduledEventSchema = Joi.object({
+  name: Joi
+    .string()
+    .min(5)
+    .max(20)
+    .alphanum(),
+
+  cron: Joi
+    .string(),
+
+  requestUrl: Joi
+    .string()
+    .uri(),
+
+  reportUrl: Joi
+    .string()
+    .uri(),
+
+  active: Joi
+    .boolean(),
+
+  runOnInit: Joi
+    .boolean(),
+
+  requestData: Joi
+    .object(),
+
+  reportRequestData: Joi
+    .object(),
+
+});
+
 export {
   ScheduledEvent,
   RequestData,
   ScheduledEventSchemaName,
   ScheduledEventSchema,
   createScheduledEventSchema,
+  updateScheduledEventSchema,
 };

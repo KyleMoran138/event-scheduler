@@ -9,6 +9,12 @@ const generateResponseBody = (message: string, data?: any) => {
 }
 
 const generateErrorResponseBody = (message: string, error: any) => {
+  if(error && error.message){
+    return JSON.stringify({
+      errorMessage: error.message,
+      error: error,
+    })
+  }
   return JSON.stringify({
     errorMessage: message,
     error,
@@ -16,13 +22,16 @@ const generateErrorResponseBody = (message: string, error: any) => {
 }
 
 const getRouteConfigForRequest = (req: Request): Route | null => {
+  const requestPathStartsWithConfigPath = (configPath: string) => {
+    return req.path.startsWith(configPath);
+  }
   const universalMethodRouteConfig = routeConfigs.find(route => 
-    route.path === req.path && 
+    requestPathStartsWithConfigPath(route.path) && 
     route.method === '*'
   );
 
   const routeConfig = routeConfigs.find(route => 
-    route.path === req.path && 
+    requestPathStartsWithConfigPath(route.path) && 
     route.method === req.method
   );
 

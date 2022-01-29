@@ -104,12 +104,13 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     if(!event){
       return null;
     }
-
+    
     if(this.cronJobs.has(eventId)){
       return this.cronJobs.get(eventId) || null;
     }
-
+    
     if(event.active){
+      console.log(`ScheduledEventService: Starting cron job for event (${event._id.toString()})`);
       const cronJob = cron.schedule(event.cron, () => {
         // log message with eventId and name
         console.log(`(${event._id.toString()})${event.name} event triggered`);
@@ -127,13 +128,14 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     if(!event){
       return false;
     }
-
+    
     if(!this.cronJobs.has(eventId)){
       return true;
     }
-
+    
     const cronJob = this.cronJobs.get(eventId);
     if(cronJob){
+      console.log(`ScheduledEventService: Stopping cron job for event (${eventId})`);
       cronJob.stop();
     }
 
@@ -172,11 +174,11 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
       throw FAILED_TO_UPDATE_SCHEDULED_EVENT();
     }
 
-    if(updatedEvent.active && !this.cronJobs.has(eventId)){
+    if(updatedEvent?.active && !this.cronJobs.has(eventId)){
       await this.startEventCron(eventId);
     }
 
-    if(!updatedEvent.active && this.cronJobs.has(eventId)){
+    if(!updatedEvent?.active && this.cronJobs.has(eventId)){
       await this.stopEventCron(eventId);
     }
 
