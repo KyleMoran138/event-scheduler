@@ -59,7 +59,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     }
 
     //schedule event
-    await this.startEventCron(event?._id.toString());
+    await this._startEventCron(event?._id.toString());
 
     return event;
 
@@ -85,21 +85,36 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return event;
   }
 
-  public deleteScheduledEvent = async (clientId: string, eventId: string): Promise<string | null> => {
+  public updateScheduledEvent = async (clientId: string, eventId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
     const event = await this.get(eventId);
     if(!event){
       return null;
     }
 
+    delete scheduledEventData.clientId;
+    delete scheduledEventData._id;
+
     if(event.clientId.toString() !== clientId){
       throw SCHEDULED_EVENT_NOT_FOUND();
     }
 
-    await this.delete(eventId);
-    return eventId;
+    const updatedEvent = await this.update(eventId, scheduledEventData);
+    if(!updatedEvent){
+      throw FAILED_TO_UPDATE_SCHEDULED_EVENT();
+    }
+
+    if(updatedEvent?.active && !this.cronJobs.has(eventId)){
+      await this._startEventCron(eventId);
+    }
+
+    if(!updatedEvent?.active && this.cronJobs.has(eventId)){
+      await this._stopEventCron(eventId);
+    }
+
+    return updatedEvent;
   }
 
-  public startEventCron = async (eventId: string): Promise<ScheduledTask | null> => {
+  private _startEventCron = async (eventId: string): Promise<ScheduledTask | null> => {
     const event = await this.get(eventId);
     if(!event){
       return null;
@@ -123,7 +138,7 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return null;
   }
 
-  public stopEventCron = async (eventId: string): Promise<boolean> => {
+  private _stopEventCron = async (eventId: string): Promise<boolean> => {
     const event = await this.get(eventId);
     if(!event){
       return false;
@@ -143,52 +158,23 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return true;
   }
 
-  public startAllEventsCrons = async (): Promise<boolean> => {
+  private _startAllEventsCrons = async (): Promise<boolean> => {
     const events = await this.getAll();
     if(!events){
       return false;
     }
 
     for(const event of events){
-      await this.startEventCron(event._id.toString());
+      await this._startEventCron(event._id.toString());
     }
 
     return true;
   }
 
-  public updateScheduledEvent = async (clientId: string, eventId: string, scheduledEventData: Partial<ScheduledEvent>): Promise<ScheduledEvent | null> => {
-    const event = await this.get(eventId);
-    if(!event){
-      return null;
-    }
-
-    delete scheduledEventData.clientId;
-    delete scheduledEventData._id;
-
-    if(event.clientId.toString() !== clientId){
-      throw SCHEDULED_EVENT_NOT_FOUND();
-    }
-
-    const updatedEvent = await this.update(eventId, scheduledEventData);
-    if(!updatedEvent){
-      throw FAILED_TO_UPDATE_SCHEDULED_EVENT();
-    }
-
-    if(updatedEvent?.active && !this.cronJobs.has(eventId)){
-      await this.startEventCron(eventId);
-    }
-
-    if(!updatedEvent?.active && this.cronJobs.has(eventId)){
-      await this.stopEventCron(eventId);
-    }
-
-    return updatedEvent;
-  }
-
   // private async method to start all cron jobs in db
   private async _initEventCronsInDb(): Promise<boolean> {
     console.log('ScheduledEventService: Loading cron jobs...');
-    const result = await this.startAllEventsCrons();
+    const result = await this._startAllEventsCrons();
     console.log(`ScheduledEventService: Loaded ${this.cronJobs.size} cron jobs.`);
     return result;
   }
