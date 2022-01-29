@@ -171,7 +171,6 @@ export default class ScheduledEventService extends Service<ScheduledEvent>{
     return true;
   }
 
-  // private async method to start all cron jobs in db
   private async _initEventCronsInDb(): Promise<boolean> {
     console.log('ScheduledEventService: Loading cron jobs...');
     const result = await this._startAllEventsCrons();

@@ -82,42 +82,17 @@ const ScheduledEventSchema = new Schema<ScheduledEvent>({
   },
 });
 
-const createScheduledEventSchema = Joi.object({
-  name: Joi
-    .string()
-    .min(5)
-    .max(20)
-    .alphanum()
-    .required(),
+const customSchemaValidators: {[key: string]: Joi.CustomValidator} = {
+  isValidUrl: (value: string, helper: Joi.CustomHelpers) => {
+    if(!value.startsWith('http') && !value.startsWith('https')){
+      return helper.error('must start with http or https');
+    }
 
-  cron: Joi
-    .string()
-    .required(),
+    return true;
+  }
+}
 
-  requestUrl: Joi
-    .string()
-    .uri()
-    .required(),
-
-  reportUrl: Joi
-    .string()
-    .uri(),
-
-  active: Joi
-    .boolean(),
-
-  runOnInit: Joi
-    .boolean(),
-
-  requestData: Joi
-    .object(),
-
-  reportRequestData: Joi
-    .object(),
-
-});
-
-const updateScheduledEventSchema = Joi.object({
+const valueSchemas = {
   name: Joi
     .string()
     .min(5)
@@ -150,6 +125,29 @@ const updateScheduledEventSchema = Joi.object({
   reportRequestData: Joi
     .object(),
 
+}
+
+const createScheduledEventSchema = Joi.object({
+  name: valueSchemas.name,
+  cron: valueSchemas.cron,
+  requestUrl: valueSchemas.requestUrl,
+  reportUrl: valueSchemas.reportUrl,
+  active: valueSchemas.active,
+  runOnInit: valueSchemas.runOnInit,
+  requestData: valueSchemas.requestData,
+  reportRequestData: valueSchemas.reportRequestData,
+});
+
+const updateScheduledEventSchema = Joi.object({
+  name: valueSchemas.name,
+  cron: valueSchemas.cron,
+  requestUrl: valueSchemas.requestUrl,
+  reportUrl: valueSchemas.reportUrl,
+  active: valueSchemas.active,
+  deleted: valueSchemas.deleted,
+  runOnInit: valueSchemas.runOnInit,
+  requestData: valueSchemas.requestData,
+  reportRequestData: valueSchemas.reportRequestData,
 });
 
 export {
